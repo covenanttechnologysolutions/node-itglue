@@ -71,17 +71,25 @@ function ITGlue({apikey, timeout, eu}) {
  * @throws {ResponseError}
  */
 ITGlue.prototype.client = function ({path, params, body, method}) {
-  return axios(path, {...this.config, method, params, data: body, url: path})
-    .then(res => {
-      return res;
-    })
-    .catch(err => {
-      const {response: {data = {}}} = err;
+  return new Promise((resolve, reject) => {
+    return axios(path, {...this.config, method, params, data: body, url: path})
+      .then(res => {
+        return resolve(res);
+      })
+      .catch(err => {
+        let data = {};
 
-      if (data.errors) {
-        throw data.errors;
-      }
-    });
+        if (err && err.response && err.response.data) {
+          data = err.response.data;
+        }
+
+        if (data.errors) {
+          return reject(data.errors);
+        } else if (err.message) {
+          return reject(err.message);
+        }
+      });
+  });
 };
 
 ITGlue.prototype.get = function ({path, params}) {
