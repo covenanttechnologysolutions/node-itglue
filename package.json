@@ -1,6 +1,6 @@
 {
   "name": "node-itglue",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Node.js wrapper for the ITGlue API",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,6 @@
     "url": "https://github.com/covenanttechnologysolutions/node-itglue.git"
   },
   "dependencies": {
-    "axios": "^0.18.0"
+    "axios": "^0.19.0"
   }
 }
