@@ -73,9 +73,9 @@ function ITGlue({
   if (!timeout) {
     timeout = 10000;
   }
-  let baseURL = BASE_URL;
+  this.apiBaseURL = BASE_URL;
   if (eu) {
-    baseURL = BASE_URL_EU;
+    this.apiBaseURL = BASE_URL_EU;
   }
 
   this.config = {};
@@ -99,7 +99,7 @@ function ITGlue({
       'authorization': `Bearer ${token}`,
     };
   } else {
-    this.config.baseURL = baseURL;
+    this.config.baseURL = this.apiBaseURL;
     this.config.headers = {
       'x-api-key': apikey,
       'cache-control': 'no-cache',
@@ -120,7 +120,7 @@ ITGlue.prototype.client = function ({path, params, body, method}) {
   return new Promise((resolve, reject) => {
     return axios(path, {...this.config, method, params, data: body})
       .then(res => {
-        return resolve(res);
+        return resolve((res && res.data) || res);
       })
       .catch(err => {
         let data = {};
@@ -180,7 +180,7 @@ ITGlue.prototype.delete = function ({path, params}) {
  */
 ITGlue.prototype.setAuthenticationMode = function (mode = 'apikey') {
   this.mode = mode;
-  const {apikey, companyUrl, token} = this;
+  const {apikey, companyUrl, token, apiBaseURL} = this;
   if (mode === MODE_USER) {
     this.config.baseURL = companyUrl;
     this.config.headers = {
@@ -195,7 +195,7 @@ ITGlue.prototype.setAuthenticationMode = function (mode = 'apikey') {
       'authorization': `Bearer ${token}`,
     };
   } else {
-    this.config.baseURL = baseURL;
+    this.config.baseURL = apiBaseURL;
     this.config.headers = {
       'x-api-key': apikey,
       'cache-control': 'no-cache',
@@ -221,7 +221,7 @@ ITGlue.prototype.getItGlueJsonWebToken = function ({email, password, otp}) {
     },
   })
     .then(result => {
-      return result.data.token;
+      return result.token;
     })
     .then(token => {
       return this.refreshItGlueJsonWebToken({token});
@@ -244,7 +244,7 @@ ITGlue.prototype.refreshItGlueJsonWebToken = function ({token}) {
     },
   })
     .then(result => {
-      return result.data.token;
+      return result.token;
     });
 };
 

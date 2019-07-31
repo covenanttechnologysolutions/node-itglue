@@ -1035,10 +1035,10 @@ function ITGlue(_ref) {
     timeout = 10000;
   }
 
-  var baseURL = BASE_URL;
+  this.apiBaseURL = BASE_URL;
 
   if (eu) {
-    baseURL = BASE_URL_EU;
+    this.apiBaseURL = BASE_URL_EU;
   }
 
   this.config = {};
@@ -1066,7 +1066,7 @@ function ITGlue(_ref) {
       'authorization': "Bearer ".concat(token)
     };
   } else {
-    this.config.baseURL = baseURL;
+    this.config.baseURL = this.apiBaseURL;
     this.config.headers = {
       'x-api-key': apikey,
       'cache-control': 'no-cache',
@@ -1097,7 +1097,7 @@ ITGlue.prototype.client = function (_ref2) {
       params: params,
       data: body
     })).then(function (res) {
-      return resolve(res);
+      return resolve(res && res.data || res);
     }).catch(function (err) {
       var data = {};
 
@@ -1193,7 +1193,8 @@ ITGlue.prototype.setAuthenticationMode = function () {
   this.mode = mode;
   var apikey = this.apikey,
       companyUrl = this.companyUrl,
-      token = this.token;
+      token = this.token,
+      apiBaseURL = this.apiBaseURL;
 
   if (mode === MODE_USER) {
     this.config.baseURL = companyUrl;
@@ -1209,7 +1210,7 @@ ITGlue.prototype.setAuthenticationMode = function () {
       'authorization': "Bearer ".concat(token)
     };
   } else {
-    this.config.baseURL = baseURL;
+    this.config.baseURL = apiBaseURL;
     this.config.headers = {
       'x-api-key': apikey,
       'cache-control': 'no-cache',
@@ -1247,7 +1248,7 @@ ITGlue.prototype.getItGlueJsonWebToken = function (_ref7) {
       }
     }
   }).then(function (result) {
-    return result.data.token;
+    return result.token;
   }).then(function (token) {
     return _this3.refreshItGlueJsonWebToken({
       token: token
@@ -1271,7 +1272,7 @@ ITGlue.prototype.refreshItGlueJsonWebToken = function (_ref8) {
       refresh_token: token
     }
   }).then(function (result) {
-    return result.data.token;
+    return result.token;
   });
 };
 /**
