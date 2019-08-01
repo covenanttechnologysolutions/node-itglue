@@ -259,9 +259,10 @@ ITGlue.prototype.refreshItGlueJsonWebToken = function ({token}) {
  * @param query
  * @param related
  * @param limit
+ * @param kind
  * @returns {Promise<Array<{}>>}
  */
-ITGlue.prototype.search = function ({query, related = false, limit = 10}) {
+ITGlue.prototype.search = function ({query, related = false, limit = 10, kind}) {
   if (this.mode !== MODE_USER_BEARER) {
     throw `mode ${MODE_USER_BEARER} required for this method.`;
   }
@@ -270,7 +271,7 @@ ITGlue.prototype.search = function ({query, related = false, limit = 10}) {
     method: GET,
     path: '/search.json',
     params: {
-      query, related, limit,
+      query, related, limit, kind,
     },
   });
 };
