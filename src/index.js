@@ -40,6 +40,7 @@ const BASE_URL_MOBILE = 'https://api-mobile-prod.itglue.com/api';
 const MODE_BEARER = 'bearer';
 const MODE_USER = 'user';
 const MODE_APIKEY = 'apikey';
+const MODE_USER_BEARER = 'user-bearer';
 
 /**
  *
@@ -60,7 +61,7 @@ const MODE_APIKEY = 'apikey';
 function ITGlue({
   apikey, mode = MODE_APIKEY, timeout, eu, companyUrl, token, user: {email, password, otp} = {},
 }) {
-  if (!companyUrl && mode === MODE_USER) {
+  if (!companyUrl && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
     throw `companyUrl must be defined in mode ${MODE_USER}`;
   }
   if (!token && mode === MODE_BEARER) {
@@ -93,6 +94,13 @@ function ITGlue({
     };
   } else if (mode === MODE_BEARER) {
     this.config.baseURL = BASE_URL_MOBILE;
+    this.config.headers = {
+      'cache-control': 'no-cache',
+      'content-type': 'application/vnd.api+json',
+      'authorization': `Bearer ${token}`,
+    };
+  } else if (mode === MODE_USER_BEARER) {
+    this.config.baseURL = companyUrl;
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/vnd.api+json',
@@ -176,7 +184,7 @@ ITGlue.prototype.delete = function ({path, params}) {
 
 /**
  *
- * @param [mode] ['apikey', 'bearer', 'user']
+ * @param [mode] ['apikey', 'bearer', 'user', 'user-bearer']
  */
 ITGlue.prototype.setAuthenticationMode = function (mode = 'apikey') {
   this.mode = mode;
@@ -208,8 +216,7 @@ ITGlue.prototype.setAuthenticationMode = function (mode = 'apikey') {
  * @param email
  * @param password
  * @param otp
- * @returns {Promise<{String}>}
- * @constructor
+ * @returns {Promise<{String}>} token
  */
 ITGlue.prototype.getItGlueJsonWebToken = function ({email, password, otp}) {
   return this.client({
@@ -233,7 +240,7 @@ ITGlue.prototype.getItGlueJsonWebToken = function ({email, password, otp}) {
 
 /**
  * @param token
- * @returns {Promise<{String}>}
+ * @returns {Promise<{String}>} token
  */
 ITGlue.prototype.refreshItGlueJsonWebToken = function ({token}) {
   return this.client({
@@ -246,6 +253,26 @@ ITGlue.prototype.refreshItGlueJsonWebToken = function ({token}) {
     .then(result => {
       return result.token;
     });
+};
+
+/**
+ * @param query
+ * @param related
+ * @param limit
+ * @returns {Promise<Array<{}>>}
+ */
+ITGlue.prototype.search = function ({query, related = false, limit = 10}) {
+  if (this.mode !== MODE_USER_BEARER) {
+    throw `mode ${MODE_USER_BEARER} required for this method.`;
+  }
+
+  return this.client({
+    method: GET,
+    path: '/search.json',
+    params: {
+      query, related, limit,
+    },
+  });
 };
 
 
