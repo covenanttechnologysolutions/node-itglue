@@ -1286,7 +1286,9 @@ ITGlue.prototype.refreshItGlueJsonWebToken = function (_ref8) {
  * @param query
  * @param related
  * @param limit
- * @param kind
+ * @param kind array-like string e.g. 'passwords,organizations'
+ * @param filter_organization_id
+ * @param sort specify value to sort on
  * @returns {Promise<Array<{}>>}
  */
 
@@ -1296,8 +1298,10 @@ ITGlue.prototype.search = function (_ref9) {
       _ref9$related = _ref9.related,
       related = _ref9$related === void 0 ? false : _ref9$related,
       _ref9$limit = _ref9.limit,
-      limit = _ref9$limit === void 0 ? 10 : _ref9$limit,
-      kind = _ref9.kind;
+      limit = _ref9$limit === void 0 ? 50 : _ref9$limit,
+      kind = _ref9.kind,
+      filter_organization_id = _ref9.filter_organization_id,
+      sort = _ref9.sort;
 
   if (this.mode !== MODE_USER_BEARER) {
     throw "mode ".concat(MODE_USER_BEARER, " required for this method.");
@@ -1310,7 +1314,9 @@ ITGlue.prototype.search = function (_ref9) {
       query: query,
       related: related,
       limit: limit,
-      kind: kind
+      kind: kind,
+      filter_organization_id: filter_organization_id,
+      sort: sort
     }
   });
 };

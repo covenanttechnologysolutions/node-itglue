@@ -1,8 +1,9 @@
 {
   "name": "node-itglue",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Node.js wrapper for the ITGlue API",
   "main": "lib/index.js",
+  "esnext": "index.js",
   "scripts": {
     "build-webpack": "webpack --config webpack.config.js",
     "build-webpack-min": "webpack --config webpack.min.config.js",
