@@ -58,9 +58,7 @@ const MODE_USER_BEARER = 'user-bearer';
  * @returns {Promise<{}>}
  * @constructor
  */
-function ITGlue({
-  apikey, mode = MODE_APIKEY, timeout, eu, companyUrl, token, user: {email, password, otp} = {},
-}) {
+function ITGlue({apikey, mode = MODE_APIKEY, timeout, eu, companyUrl, token, user: {email, password, otp} = {}}) {
   if (!companyUrl && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
     throw `companyUrl must be defined in mode ${MODE_USER}`;
   }
@@ -259,10 +257,12 @@ ITGlue.prototype.refreshItGlueJsonWebToken = function ({token}) {
  * @param query
  * @param related
  * @param limit
- * @param kind
+ * @param kind array-like string e.g. 'passwords,organizations'
+ * @param filter_organization_id
+ * @param sort specify value to sort on
  * @returns {Promise<Array<{}>>}
  */
-ITGlue.prototype.search = function ({query, related = false, limit = 10, kind}) {
+ITGlue.prototype.search = function ({query, related = false, limit = 50, kind, filter_organization_id, sort}) {
   if (this.mode !== MODE_USER_BEARER) {
     throw `mode ${MODE_USER_BEARER} required for this method.`;
   }
@@ -271,11 +271,10 @@ ITGlue.prototype.search = function ({query, related = false, limit = 10, kind}) 
     method: GET,
     path: '/search.json',
     params: {
-      query, related, limit, kind,
+      query, related, limit, kind, filter_organization_id, sort,
     },
   });
 };
-
 
 /**
  * @type {ITGlue}
