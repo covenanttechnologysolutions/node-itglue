@@ -59,11 +59,12 @@ const MODES = [MODE_BEARER, MODE_USER, MODE_APIKEY, MODE_USER_BEARER];
  * @returns {Promise<{}>}
  * @constructor
  */
-function ITGlue({apikey, mode = MODE_APIKEY, timeout = 10000, eu, subdomain, token, user: {email, password, otp} = {}}) {
+function ITGlue({apikey, mode = MODE_APIKEY, timeout = 10000, eu, subdomain, companyUrl, token, user: {email, password, otp} = {}}) {
   if (!MODES.includes(mode)) {
     throw new Error(`mode ${mode} must be one of ['${MODES.join('\',\'')}']`);
   }
-  if (!subdomain && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
+
+  if ((!subdomain && !companyUrl) && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
     throw new Error(`subdomain must be defined in mode ${MODE_USER}`);
   }
   if (!token && mode === MODE_BEARER) {
@@ -84,36 +85,10 @@ function ITGlue({apikey, mode = MODE_APIKEY, timeout = 10000, eu, subdomain, tok
   this.user = {email, password, otp};
   this.apikey = apikey;
   this.subdomain = subdomain;
+  this.companyUrl = companyUrl;
   this.timeout = timeout;
 
-  if (mode === MODE_USER) {
-    this.config.baseURL = `https://${subdomain}.itglue.com`;
-    this.config.headers = {
-      'cache-control': 'no-cache',
-      'content-type': 'application/json',
-    };
-  } else if (mode === MODE_BEARER) {
-    this.config.baseURL = BASE_URL_MOBILE;
-    this.config.headers = {
-      'cache-control': 'no-cache',
-      'content-type': 'application/vnd.api+json',
-      'authorization': `Bearer ${token}`,
-    };
-  } else if (mode === MODE_USER_BEARER) {
-    this.config.baseURL = `https://${subdomain}.itglue.com`;
-    this.config.headers = {
-      'cache-control': 'no-cache',
-      'content-type': 'application/vnd.api+json',
-      'authorization': `Bearer ${token}`,
-    };
-  } else {
-    this.config.baseURL = this.apiBaseURL;
-    this.config.headers = {
-      'x-api-key': apikey,
-      'cache-control': 'no-cache',
-      'content-type': 'application/vnd.api+json',
-    };
-  }
+  this.setAuthenticationMode(mode);
 }
 
 /**
@@ -181,9 +156,13 @@ ITGlue.prototype.delete = function ({path, params}) {
  */
 ITGlue.prototype.setAuthenticationMode = function (mode = 'apikey') {
   this.mode = mode;
-  const {apikey, subdomain, token, apiBaseURL} = this;
+  const {apikey, subdomain, companyUrl, token, apiBaseURL} = this;
   if (mode === MODE_USER) {
-    this.config.baseURL = `https://${subdomain}.itglue.com`;
+    if (companyUrl) {
+      this.config.baseURL = companyUrl;
+    } else {
+      this.config.baseURL = `https://${subdomain}.itglue.com`;
+    }
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/json',
@@ -196,7 +175,11 @@ ITGlue.prototype.setAuthenticationMode = function (mode = 'apikey') {
       'authorization': `Bearer ${token}`,
     };
   } else if (mode === MODE_USER_BEARER) {
-    this.config.baseURL = `https://${subdomain}.itglue.com`;
+    if (companyUrl) {
+      this.config.baseURL = companyUrl;
+    } else {
+      this.config.baseURL = `https://${subdomain}.itglue.com`;
+    }
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/vnd.api+json',
