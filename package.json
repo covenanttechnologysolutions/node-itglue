@@ -1,6 +1,6 @@
 {
   "name": "node-itglue",
-  "version": "0.4.2",
+  "version": "1.0.0",
   "description": "Node.js wrapper for the ITGlue API",
   "main": "lib/index.js",
   "esnext": "index.js",
@@ -24,8 +24,8 @@
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "babel-loader": "^8.0.6",
-    "uglifyjs-webpack-plugin": "^2.1.3",
-    "webpack": "^4.37.0",
+    "uglifyjs-webpack-plugin": "^2.2.0",
+    "webpack": "^4.39.1",
     "webpack-cli": "^3.3.6"
   }
 }
