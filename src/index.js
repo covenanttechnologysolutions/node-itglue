@@ -41,6 +41,7 @@ const MODE_BEARER = 'bearer';
 const MODE_USER = 'user';
 const MODE_APIKEY = 'apikey';
 const MODE_USER_BEARER = 'user-bearer';
+const MODES = [MODE_BEARER, MODE_USER, MODE_APIKEY, MODE_USER_BEARER];
 
 /**
  *
@@ -49,7 +50,7 @@ const MODE_USER_BEARER = 'user-bearer';
  * @param [config.apikey] specify to access API methods
  * @param [config.timeout=10000]
  * @param [config.eu=false]
- * @param [config.companyUrl] specify to get a bearer token
+ * @param [config.subdomain] specify to get a bearer token
  * @param [config.token] specify authentication using a bearer token
  * @param [config.user]
  * @param [config.user.email]
@@ -58,20 +59,20 @@ const MODE_USER_BEARER = 'user-bearer';
  * @returns {Promise<{}>}
  * @constructor
  */
-function ITGlue({apikey, mode = MODE_APIKEY, timeout, eu, companyUrl, token, user: {email, password, otp} = {}}) {
-  if (!companyUrl && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
-    throw `companyUrl must be defined in mode ${MODE_USER}`;
+function ITGlue({apikey, mode = MODE_APIKEY, timeout = 10000, eu, subdomain, token, user: {email, password, otp} = {}}) {
+  if (!MODES.includes(mode)) {
+    throw new Error(`mode ${mode} must be one of ['${MODES.join('\',\'')}']`);
+  }
+  if (!subdomain && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
+    throw new Error(`subdomain must be defined in mode ${MODE_USER}`);
   }
   if (!token && mode === MODE_BEARER) {
-    throw `token must be defined in mode ${MODE_BEARER}`;
+    throw new Error(`token must be defined in mode ${MODE_BEARER}`);
   }
   if (!apikey && mode === MODE_APIKEY) {
-    throw `apikey must be defined in mode ${MODE_APIKEY}`;
+    throw new Error(`apikey must be defined in mode ${MODE_APIKEY}`);
   }
 
-  if (!timeout) {
-    timeout = 10000;
-  }
   this.apiBaseURL = BASE_URL;
   if (eu) {
     this.apiBaseURL = BASE_URL_EU;
@@ -82,10 +83,11 @@ function ITGlue({apikey, mode = MODE_APIKEY, timeout, eu, companyUrl, token, use
   this.token = token;
   this.user = {email, password, otp};
   this.apikey = apikey;
-  this.companyUrl = companyUrl;
+  this.subdomain = subdomain;
+  this.timeout = timeout;
 
   if (mode === MODE_USER) {
-    this.config.baseURL = companyUrl;
+    this.config.baseURL = `https://${subdomain}.itglue.com`;
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/json',
@@ -98,7 +100,7 @@ function ITGlue({apikey, mode = MODE_APIKEY, timeout, eu, companyUrl, token, use
       'authorization': `Bearer ${token}`,
     };
   } else if (mode === MODE_USER_BEARER) {
-    this.config.baseURL = companyUrl;
+    this.config.baseURL = `https://${subdomain}.itglue.com`;
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/vnd.api+json',
@@ -129,17 +131,7 @@ ITGlue.prototype.client = function ({path, params, body, method}) {
         return resolve((res && res.data) || res);
       })
       .catch(err => {
-        let data = {};
-
-        if (err && err.response && err.response.data) {
-          data = err.response.data;
-        }
-
-        if (data && data.errors) {
-          return reject(data.errors);
-        } else if (err.message) {
-          return reject(err.message);
-        }
+        return reject((err && err.response) || err);
       });
   });
 };
@@ -157,6 +149,9 @@ ITGlue.prototype.handler = function (options) {
       });
   } else if (this.mode === MODE_USER && this.token) {
     this.setAuthenticationMode(MODE_BEARER);
+    return this.client(options);
+  } else if (this.mode === MODE_USER_BEARER && this.token) {
+    this.setAuthenticationMode(MODE_USER_BEARER);
     return this.client(options);
   }
   if (this.mode === MODE_BEARER) {
@@ -186,15 +181,22 @@ ITGlue.prototype.delete = function ({path, params}) {
  */
 ITGlue.prototype.setAuthenticationMode = function (mode = 'apikey') {
   this.mode = mode;
-  const {apikey, companyUrl, token, apiBaseURL} = this;
+  const {apikey, subdomain, token, apiBaseURL} = this;
   if (mode === MODE_USER) {
-    this.config.baseURL = companyUrl;
+    this.config.baseURL = `https://${subdomain}.itglue.com`;
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/json',
     };
   } else if (mode === MODE_BEARER) {
     this.config.baseURL = BASE_URL_MOBILE;
+    this.config.headers = {
+      'cache-control': 'no-cache',
+      'content-type': 'application/vnd.api+json',
+      'authorization': `Bearer ${token}`,
+    };
+  } else if (mode === MODE_USER_BEARER) {
+    this.config.baseURL = `https://${subdomain}.itglue.com`;
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/vnd.api+json',
@@ -264,7 +266,7 @@ ITGlue.prototype.refreshItGlueJsonWebToken = function ({token}) {
  */
 ITGlue.prototype.search = function ({query, related = false, limit = 50, kind, filter_organization_id, sort}) {
   if (this.mode !== MODE_USER_BEARER) {
-    throw `mode ${MODE_USER_BEARER} required for this method.`;
+    throw new Error(`mode ${MODE_USER_BEARER} required for this method.`);
   }
 
   return this.client({
