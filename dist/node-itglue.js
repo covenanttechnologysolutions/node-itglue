@@ -1015,6 +1015,7 @@ function ITGlue(_ref) {
       timeout = _ref$timeout === void 0 ? 10000 : _ref$timeout,
       eu = _ref.eu,
       subdomain = _ref.subdomain,
+      companyUrl = _ref.companyUrl,
       token = _ref.token,
       _ref$user = _ref.user;
   _ref$user = _ref$user === void 0 ? {} : _ref$user;
@@ -1026,7 +1027,7 @@ function ITGlue(_ref) {
     throw new Error("mode ".concat(mode, " must be one of ['").concat(MODES.join('\',\''), "']"));
   }
 
-  if (!subdomain && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
+  if (!subdomain && !companyUrl && (mode === MODE_USER || mode === MODE_USER_BEARER)) {
     throw new Error("subdomain must be defined in mode ".concat(MODE_USER));
   }
 
@@ -1054,36 +1055,9 @@ function ITGlue(_ref) {
   };
   this.apikey = apikey;
   this.subdomain = subdomain;
+  this.companyUrl = companyUrl;
   this.timeout = timeout;
-
-  if (mode === MODE_USER) {
-    this.config.baseURL = "https://".concat(subdomain, ".itglue.com");
-    this.config.headers = {
-      'cache-control': 'no-cache',
-      'content-type': 'application/json'
-    };
-  } else if (mode === MODE_BEARER) {
-    this.config.baseURL = BASE_URL_MOBILE;
-    this.config.headers = {
-      'cache-control': 'no-cache',
-      'content-type': 'application/vnd.api+json',
-      'authorization': "Bearer ".concat(token)
-    };
-  } else if (mode === MODE_USER_BEARER) {
-    this.config.baseURL = "https://".concat(subdomain, ".itglue.com");
-    this.config.headers = {
-      'cache-control': 'no-cache',
-      'content-type': 'application/vnd.api+json',
-      'authorization': "Bearer ".concat(token)
-    };
-  } else {
-    this.config.baseURL = this.apiBaseURL;
-    this.config.headers = {
-      'x-api-key': apikey,
-      'cache-control': 'no-cache',
-      'content-type': 'application/vnd.api+json'
-    };
-  }
+  this.setAuthenticationMode(mode);
 }
 /**
  * @param path
@@ -1197,11 +1171,17 @@ ITGlue.prototype.setAuthenticationMode = function () {
   this.mode = mode;
   var apikey = this.apikey,
       subdomain = this.subdomain,
+      companyUrl = this.companyUrl,
       token = this.token,
       apiBaseURL = this.apiBaseURL;
 
   if (mode === MODE_USER) {
-    this.config.baseURL = "https://".concat(subdomain, ".itglue.com");
+    if (companyUrl) {
+      this.config.baseURL = companyUrl;
+    } else {
+      this.config.baseURL = "https://".concat(subdomain, ".itglue.com");
+    }
+
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/json'
@@ -1214,7 +1194,12 @@ ITGlue.prototype.setAuthenticationMode = function () {
       'authorization': "Bearer ".concat(token)
     };
   } else if (mode === MODE_USER_BEARER) {
-    this.config.baseURL = "https://".concat(subdomain, ".itglue.com");
+    if (companyUrl) {
+      this.config.baseURL = companyUrl;
+    } else {
+      this.config.baseURL = "https://".concat(subdomain, ".itglue.com");
+    }
+
     this.config.headers = {
       'cache-control': 'no-cache',
       'content-type': 'application/vnd.api+json',
