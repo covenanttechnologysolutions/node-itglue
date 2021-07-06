@@ -1,5 +1,6 @@
-var path = require('path');
-var config = {};
+const path = require('path');
+const config = {};
+const TerserPlugin = require('terser-webpack-plugin');
 
 
 /*
@@ -35,6 +36,7 @@ function getConfig(name) {
 
   if (minimize) {
     config.optimization.minimize = true;
+    config.optimization.minimizer = [new TerserPlugin()];
   }
 
   return config;
